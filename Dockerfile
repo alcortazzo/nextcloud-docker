@@ -1,4 +1,4 @@
-FROM nextcloud:24.0.6-fpm
+FROM nextcloud:25.0.1-fpm as nc
 
 RUN set -ex; \
     apt-get update; \
