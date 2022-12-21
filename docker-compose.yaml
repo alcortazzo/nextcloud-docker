@@ -1,63 +1,38 @@
-version: '3.8'
+version: '3'
 
 services:
-  # db:
-  #   image: mysql:8.0.31
-  #   command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
-  #   restart: always
-  #   volumes:
-  #     - ./db:/var/lib/mysql
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - nextcloud
-
-  db:
-    image: mariadb:10.9.3
-    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+  nextcloud_db:
+    image: mariadb
     restart: always
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    networks:
+      - cloudnet
     volumes:
-      - ./db:/var/lib/mysql
+      - ./nextcloud-db:/var/lib/mysql
     env_file:
       - .env
-    networks:
-      - nextcloud
 
-  app:
+  nextcloud:
     build:
       context: .
       target: nc
-    links:
-      - db
+    restart: always
+    networks:
+      - cloudnet
+    ports:
+      - 8088:80
     volumes:
-      - ./nextcloud:/var/www/html:z
-    depends_on:
-      - db
+      - ./nextcloud-docroot:/var/www/html
     env_file:
       - .env
-    restart: always
-    networks:
-      - nextcloud
 
-  web:
-    image: nginx
-    ports:
-      - 8080:80
-    links:
-      - app
-    volumes:
-      - ./nextcloud:/var/www/html:z
-      - ./nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - app
+  nextcloud_redis:
+    image: redis:alpine
     restart: always
     networks:
-      - nextcloud
+      - cloudnet
 
 networks:
-  nextcloud:
-
-
-volumes:
-  nextcloud:
-  db:
+  cloudnet:
+    name: cloudnet
+    driver: bridge
